@@ -1,23 +1,3 @@
-"""
-Inventory Forecast & Procurement Planner  v5  (Holt-Winters)
-=============================================================
-Forecasting: Holt-Winters Multiplicative method
-  - Seasonal factors initialized from col E multipliers, updated with gamma
-  - Level (alpha) + Trend (beta, damped by phi) + Seasonal (gamma)
-  - Future seasonal factors from user-provided future multipliers
-
-Order logic:
-  Trigger Level = ROP + Lead_Time × Daily_Rate
-  Place order when stock ≤ Trigger → delivery arrives at stock = ROP
-  Order Qty = round_up_500( max(45 × daily_rate, min_order) )
-  Only ONE pending order at a time.
-
-Charts: matplotlib PNG embedded — guaranteed to display in all Excel versions.
-  Chart 1 — Demand: Historical vs HW Fitted vs Forecast
-  Chart 2 — Monthly Stock Level, ROP, Trigger Level, Orders
-  Chart 3 — Day-by-Day Stock Simulation
-"""
-
 import io, math, calendar
 from datetime import date, timedelta
 import numpy as np
@@ -97,28 +77,6 @@ def round_up_to(v, u):   return math.ceil(max(v, 1) / u) * u
 # ── Holt-Winters Multiplicative ───────────────────────────────────────────────
 
 def holt_winters_mult(demand, multipliers, alpha, beta, gamma, phi):
-    """
-    Holt-Winters Multiplicative smoothing.
-
-    Seasonal factors (S) are INITIALIZED from user-provided col E multipliers,
-    then updated each period using gamma. This is the correct approach when
-    you have less than one full seasonal cycle (< 12 months here = 9 months).
-
-    Recurrence:
-        L[t] = alpha  * (y[t] / S[t])        + (1-alpha) * (L[t-1] + phi*B[t-1])
-        B[t] = beta   * (L[t] - L[t-1])      + (1-beta)  * phi*B[t-1]
-        S[t] = gamma  * (y[t] / L[t])        + (1-gamma) * S[t]
-        fitted[t] = L[t] * S[t]
-
-    Parameters
-    ----------
-    demand      : historical demand array
-    multipliers : seasonal indices from col E (used to initialize S)
-    alpha       : level smoothing weight [0,1]
-    beta        : trend smoothing weight [0,1]
-    gamma       : seasonal smoothing weight [0,1]
-    phi         : trend damping factor [0.8, 1.0]
-    """
     n   = len(demand)
     L   = np.empty(n)
     B   = np.empty(n)
